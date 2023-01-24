@@ -8,6 +8,8 @@ pandas = "*"
 numpy = "*"
 ipython = "*"
 streamlit = "*"
+pyxlsb = "*"
+xlsxwriter = "*"
 
 [dev-packages]
 
