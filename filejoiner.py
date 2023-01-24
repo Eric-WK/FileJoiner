@@ -68,6 +68,9 @@ if uploaded_files:
                 ## drop the "#" column 
                 joined_df.drop("#", axis=1, inplace=True)
 
+                ## reset the index and drop it 
+                joined_df.reset_index(drop=True, inplace=True)
+
                 ## show the joined dataframe 
                 st.dataframe(joined_df)
 
