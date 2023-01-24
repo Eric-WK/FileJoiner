@@ -4,6 +4,7 @@ import os
 from io import BytesIO
 from pyxlsb import open_workbook as open_xlsb
 import xlsxwriter
+import openpyxl
 
 
 def to_excel(df):
@@ -33,10 +34,11 @@ st.markdown(
 3. Download the joined file. 
 """
 )
-
+## add a flag to ignore the warning messages 
+warn_messages = st.radio("Ignore warning messages?", ("Yes", "No"))
 ## upload multiple files
 uploaded_files = st.file_uploader(
-    "Upload files", type=["csv", "tsv"], accept_multiple_files=True
+    "Upload files", type=["csv", "tsv", "xlsx"], accept_multiple_files=True
 )
 
 if uploaded_files:
@@ -47,10 +49,14 @@ if uploaded_files:
 
         ## we get the first common part of the filename
         stub = os.path.commonprefix(all_files_names)
-        if stub:
+
+        ## get the extension of the files uploaded
+        ext = os.path.splitext(all_files_names[0])[1]
+
+        if stub or warn_messages == "Yes":
             st.success("All files have the same prefix. You can proceed.")
             ## count the number of files that have the same stub
-            count = len([x for x in all_files_names if x.startswith(stub)])
+            count = len([x for x in all_files_names if x.startswith(stub)]) if warn_messages == "Yes" else len(all_files_names)
 
             ## create two columns:
             col1, col2 = st.columns(2)
@@ -62,7 +68,7 @@ if uploaded_files:
             col2.metric("Number of files with the same prefix: ", count)
 
             ## input the stub from the user, it is prefilled with the common part of the filename
-            stub = st.text_input("Enter the file names to be joined", stub)
+            stub = st.text_input("Enter the file names to be joined", stub) if stub else ""
 
             ## create two more columns: process & download button
             process_btn, download_btn = st.columns(2)
@@ -75,10 +81,13 @@ if uploaded_files:
                 ## iterate through the uploaded files
                 for file in uploaded_files:
                     ## read the file as a dataframe
-                    df = pd.read_csv(file, encoding="utf-16", sep="\t")
+                    if ext in [".csv", ".tsv"]:
+                        df = pd.read_csv(file, encoding="utf-16", sep="\t")
+                    elif ext == ".xlsx":
+                        ## read the 
+                        df = pd.read_excel(file)
                     ## append the dataframe to the list
                     dfs.append(df)
-
                 ## join the dataframes
                 joined_df = pd.concat(dfs)
 
@@ -86,7 +95,10 @@ if uploaded_files:
                 joined_df.fillna(0, inplace=True)
 
                 ## drop the "#" column
-                joined_df.drop("#", axis=1, inplace=True)
+                # joined_df.drop("#", axis=1, inplace=True)
+                if "#" in joined_df.columns:
+                    joined_df.drop("#", axis=1, inplace=True)
+                
 
                 ## reset the index and drop it
                 joined_df.reset_index(drop=True, inplace=True)
