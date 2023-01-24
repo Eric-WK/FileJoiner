@@ -118,7 +118,7 @@ if uploaded_files:
                 download_btn.download_button(
                     label="📥 Download Result",
                     data=df_excel,
-                    file_name=f"{stub}_joined.xlsx",
+                    file_name=f"{stub}_joined.xlsx" if stub else "joined_result.xlsx",
                 )
 
         else:
